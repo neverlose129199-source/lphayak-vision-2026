@@ -1,0 +1,36 @@
+{
+  "applets": [{
+    "lastAccessTime": "2026-01-25T20:08:54.869943Z",
+    "firstAccessTime": "2026-01-25T20:08:54.869943Z",
+    "source": {
+      "sourceType": "BUNDLED",
+      "bundled": {
+        "id": "live_audio"
+      }
+    },
+    "name": "Audio Orb",
+    "description": "Speak, and the orb responds. An interactive experience powered by the Live Audio API."
+  }, {
+    "lastAccessTime": "2026-01-11T23:01:24.440810Z",
+    "firstAccessTime": "2026-01-11T23:01:24.440810Z",
+    "source": {
+      "sourceType": "BUNDLED",
+      "bundled": {
+        "id": "svg_generator"
+      }
+    },
+    "name": "SVG Generator",
+    "description": "Describe an object, icon, or scene, and we\u0027ll render it as vector art."
+  }, {
+    "lastAccessTime": "2026-01-11T22:59:36.012855Z",
+    "firstAccessTime": "2026-01-11T22:59:36.012855Z",
+    "source": {
+      "sourceType": "BUNDLED",
+      "bundled": {
+        "id": "angular_example"
+      }
+    },
+    "name": "Angular Example",
+    "description": "Example Angular app using Gemini"
+  }]
+}
