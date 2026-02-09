@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMAGINE 2026 - Test Site Repository</title>
+    <!-- Tailwind CSS for modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;700;900&display=swap');
+        body { font-family: 'Prompt', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .gradient-bg { background: radial-gradient(circle at top right, #2d1b0a 0%, #0c0a09 100%); }
+    </style>
+</head>
+<body class="gradient-bg text-stone-200 min-h-screen">
+
+    <div id="app" class="max-w-md mx-auto p-6 pb-24">
+        <!-- Status Header -->
+        <header class="flex justify-between items-end mb-8 pt-4">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter text-white uppercase italic">Imagine 2026</h1>
+                <p class="text-[10px] uppercase tracking-[0.4em] text-orange-500 font-bold">The Way of the Tiger</p>
+            </div>
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2 mb-1">
+                    <i data-lucide="zap" class="w-4 h-4 text-orange-400 fill-orange-400"></i>
+                    <span id="energy-text" class="text-xl font-mono font-bold text-white">100%</span>
+                </div>
+                <div class="w-24 h-1.5 bg-stone-800 rounded-full overflow-hidden">
+                    <div id="energy-bar" class="h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-1000" style="width: 100%"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Display (Nimit Canvas) -->
+        <main id="canvas" class="aspect-square bg-stone-900/50 backdrop-blur-sm rounded-[3rem] border border-stone-800/50 shadow-2xl relative overflow-hidden group mb-8 flex items-center justify-center">
+            <!-- Initial Placeholder -->
+            <div id="placeholder" class="text-center opacity-20 space-y-4">
+                <i data-lucide="sparkles" class="w-20 h-20 mx-auto"></i>
+                <p class="text-xs uppercase tracking-widest font-bold">รอการเนรมิตนิมิต...</p>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading-state" class="hidden text-center space-y-6">
+                <div class="relative">
+                    <i data-lucide="loader-2" class="w-16 h-16 mx-auto animate-spin text-orange-500"></i>
+                    <i data-lucide="tiger" class="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white"></i>
+                </div>
+                <p class="text-xs uppercase tracking-widest animate-pulse font-bold text-orange-200">กำลังเชื่อมต่อจิตกับ AI...</p>
+            </div>
+
+            <!-- Result Image -->
+            <img id="result-image" class="hidden w-full h-full object-cover animate-in fade-in zoom-in duration-1000" alt="Vision Result">
+
+            <!-- Action Floating Buttons -->
+            <div id="image-actions" class="hidden absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/90 to-transparent flex justify-between items-center transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <button onclick="saveToGallery()" class="p-4 bg-white text-black rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all">
+                    <i data-lucide="save"></i>
+                </button>
+                <button onclick="resetCanvas()" class="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white hover:bg-white/20 active:scale-95 transition-all">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+            </div>
+        </main>
+
+        <!-- Control Panel -->
+        <section class="space-y-6 bg-stone-900/30 p-6 rounded-[2rem] border border-stone-800/50">
+            <div class="space-y-3">
+                <div class="flex justify-between px-1">
+                    <label class="text-[10px] font-black uppercase text-stone-500 tracking-widest">คำอธิษฐานนิมิต (Prompt)</label>
+                    <span id="char-count" class="text-[10px] text-stone-700">0/200</span>
+                </div>
+                <textarea id="prompt-input" maxlength="200" oninput="updateCharCount()" placeholder="บรรยายภาพที่อยากเห็น... เช่น 'เสือคำรามกลางพายุหิมะสีคราม'" class="w-full bg-stone-950 border border-stone-800 rounded-2xl p-4 text-sm text-stone-200 outline-none focus:border-orange-500/50 transition-all h-28 resize-none shadow-inner"></textarea>
+            </div>
+
+            <!-- Quick Style Presets -->
+            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="preset-container"></div>
+
+            <button onclick="generateImage()" id="gen-btn" class="w-full py-5 bg-white text-stone-950 font-black rounded-[2rem] shadow-2xl hover:bg-orange-50 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-20 group">
+                <i data-lucide="wand-2" class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
+                <span class="uppercase tracking-[0.2em] text-sm">เนรมิตนิมิตเดี๋ยวนี้</span>
+            </button>
+        </section>
+
+        <!-- Saved Visions (History) -->
+        <section id="gallery-section" class="mt-12 space-y-6 hidden">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="text-[10px] font-black uppercase text-stone-500 tracking-widest flex items-center gap-2">
+                    <i data-lucide="history" class="w-3 h-3"></i>
+                    คลังนิมิตที่บันทึกไว้
+                </h3>
+                <span id="gallery-count" class="text-[10px] bg-stone-800 px-2 py-0.5 rounded-full text-stone-400">0</span>
+            </div>
+            <div id="gallery-grid" class="grid grid-cols-2 gap-4"></div>
+        </section>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white text-stone-900 px-8 py-4 rounded-full shadow-2xl hidden flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+        <div id="toast-icon-bg" class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+        </div>
+        <span id="toast-text" class="text-[11px] font-black uppercase tracking-widest"></span>
+    </div>
+
+    <script>
+        let energy = 100;
+        let currentImage = null;
+        let inventory = [];
+        const apiKey = ""; // Your API Key from Google AI Studio
+
+        const presets = [
+            { id: 'earthy', name: 'Retro 70s', prompt: "Earthy retro 1970s style, terracotta and avocado colors, vintage grain." },
+            { id: 'gold', name: 'Thai Gold', prompt: "Traditional Thai art, black lacquer with gold leaf, intricate line work." },
+            { id: 'cyber', name: 'Cyber Neon', prompt: "Cyberpunk neon city, glowing blue and magenta lights, high tech." },
+            { id: 'dream', name: 'Dreamy', prompt: "Ethereal watercolor, soft pastels, floating clouds, magical atmosphere." }
+        ];
+
+        let selectedPreset = 'earthy';
+
+        function init() {
+            lucide.createIcons();
+            renderPresets();
+            
+            // Energy recovery loop
+            setInterval(() => {
+                if (energy < 100) {
+                    energy = Math.min(100, energy + 5);
+                    updateEnergyUI();
+                }
+            }, 10000);
+        }
+
+        function renderPresets() {
+            const container = document.getElementById('preset-container');
+            container.innerHTML = presets.map(p => `
+                <button onclick="selectPreset('${p.id}')" id="btn-${p.id}" class="preset-btn whitespace-nowrap px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${selectedPreset === p.id ? 'bg-orange-600 border-orange-500 text-white shadow-lg' : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'}">
+                    ${p.name}
+                </button>
+            `).join('');
+        }
+
+        function selectPreset(id) {
+            selectedPreset = id;
+            document.getElementById('prompt-input').value = "";
+            updateCharCount();
+            renderPresets();
+        }
+
+        function updateEnergyUI() {
+            document.getElementById('energy-text').innerText = `${energy}%`;
+            document.getElementById('energy-bar').style.width = `${energy}%`;
+        }
+
+        function updateCharCount() {
+            const val = document.getElementById('prompt-input').value.length;
+            document.getElementById('char-count').innerText = `${val}/200`;
+        }
+
+        function showNotification(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const iconBg = document.getElementById('toast-icon-bg');
+            document.getElementById('toast-text').innerText = msg;
+            
+            iconBg.className = isError ? "w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white" : "w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white";
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        async function generateImage() {
+            if (energy < 20) {
+                showNotification("พลังงานจิตไม่เพียงพอ", true);
+                return;
+            }
+
+            const customPrompt = document.getElementById('prompt-input').value;
+            const stylePrompt = presets.find(p => p.id === selectedPreset).prompt;
+            const finalPrompt = `A majestic tiger in ${customPrompt || stylePrompt}, masterpiece, high detail, artistic lighting.`;
+
+            // State UI Update
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('result-image').classList.add('hidden');
+            document.getElementById('image-actions').classList.add('hidden');
+            document.getElementById('gen-btn').disabled = true;
+
+            try {
+                if (!apiKey) throw new Error("Key Missing");
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instances: [{ prompt: finalPrompt }], parameters: { sampleCount: 1 } })
+                });
+                
+                const result = await response.json();
+                if (result.predictions?.[0]?.bytesBase64Encoded) {
+                    displayResult(`data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`);
+                } else {
+                    throw new Error("No image data");
+                }
+            } catch (e) {
+                // Fallback for Demo purposes
+                setTimeout(() => {
+                    const fallbackImages = [
+                        "https://images.unsplash.com/photo-1501705388883-4ed8a543392c?auto=format&fit=crop&q=80&w=1000",
+                        "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=1000"
+                    ];
+                    displayResult(fallbackImages[Math.floor(Math.random()*fallbackImages.length)]);
+                    showNotification("เชื่อมต่อจิตสำเร็จ (โหมดสาธิต)");
+                }, 2500);
+            }
+        }
+
+        function displayResult(url) {
+            currentImage = url;
+            energy -= 20;
+            updateEnergyUI();
+            
+            document.getElementById('loading-state').classList.add('hidden');
+            const img = document.getElementById('result-image');
+            img.src = url;
+            img.classList.remove('hidden');
+            document.getElementById('image-actions').classList.remove('hidden');
+            document.getElementById('gen-btn').disabled = false;
+            lucide.createIcons();
+        }
+
+        function resetCanvas() {
+            currentImage = null;
+            document.getElementById('result-image').classList.add('hidden');
+            document.getElementById('image-actions').classList.add('hidden');
+            document.getElementById('placeholder').classList.remove('hidden');
+        }
+
+        function saveToGallery() {
+            if (!currentImage) return;
+            const desc = document.getElementById('prompt-input').value || presets.find(p => p.id === selectedPreset).name;
+            inventory.unshift({ id: Date.now(), url: currentImage, desc: desc });
+            renderGallery();
+            showNotification("บันทึกนิมิตลงคลังแล้ว");
+        }
+
+        function renderGallery() {
+            const section = document.getElementById('gallery-section');
+            const grid = document.getElementById('gallery-grid');
+            const count = document.getElementById('gallery-count');
+            
+            section.classList.remove('hidden');
+            count.innerText = inventory.length;
+            
+            grid.innerHTML = inventory.map(item => `
+                <div class="bg-stone-900 rounded-[2rem] overflow-hidden border border-stone-800 shadow-lg group relative">
+                    <img src="${item.url}" class="w-full aspect-square object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div class="p-3 bg-stone-900/90 border-t border-stone-800">
+                        <p class="text-[9px] text-orange-500 font-bold uppercase truncate">${item.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
